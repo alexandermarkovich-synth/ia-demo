@@ -1,0 +1,58 @@
+services:
+  # LiveKit Server
+  livekit:
+    image: livekit/livekit-server:latest
+    # command: dev
+    command: ["--dev", "--bind", "0.0.0.0"] 
+    ports:
+      - "7880:7880"
+      # - "7881:7881"   # Admin API
+    environment:
+      LIVEKIT_KEYS: "devkey: secret"
+    networks:
+      - livekit-net
+
+  # Next.js Frontend (agents-playground)
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+      - /app/.next
+    environment:
+      - NODE_ENV=development
+      - NEXT_TELEMETRY_DISABLED=1
+      - LIVEKIT_API_KEY=devkey
+      - LIVEKIT_API_SECRET=secret
+      - NEXT_PUBLIC_LIVEKIT_URL=ws://127.0.0.1:7880
+    networks:
+      - livekit-net
+    depends_on:
+      - livekit
+
+  # Python Agent
+  agent:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    volumes:
+      - .:/app
+      - ~/.livekit:/root/.livekit
+    environment:
+      - PYTHONPATH=/app/src
+      - LIVEKIT_URL=ws://livekit:7880
+      - LIVEKIT_API_KEY=devkey
+      - LIVEKIT_API_SECRET=secret
+    command: uv run python src/audio3.py dev
+    networks:
+      - livekit-net
+    depends_on:
+      - livekit
+
+networks:
+  livekit-net:
+    driver: bridge
