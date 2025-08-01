@@ -1,10 +1,10 @@
 import asyncio
+import contextlib
 import logging
 
 import numpy as np
 from dotenv import load_dotenv
 from livekit import agents, rtc
-import contextlib
 
 # Configuration constants
 SAMPLE_RATE = 48000
@@ -19,13 +19,11 @@ load_dotenv(".env.local")
 logger = logging.getLogger(__name__)
 
 
-
 async def audio_processor(track: rtc.Track, queue: asyncio.Queue):
     audio_stream = rtc.AudioStream(track)
     async for audio_stream_event in audio_stream:
         await queue.put(audio_stream_event)
     await audio_stream.aclose()
-
 
 async def video_processor(track: rtc.Track, queue: asyncio.Queue):
     """Process incoming video frames and put them in queue for syncing"""
@@ -75,7 +73,6 @@ async def audio_publisher(audio_source: rtc.AudioSource, audio_queue: asyncio.Qu
             logger.error(f"Error in stream synchronizer: {e}")
             await asyncio.sleep(0.01)
 
-
 async def video_publisher(video_source: rtc.VideoSource, video_queue: asyncio.Queue):
     while True:
 
@@ -94,7 +91,6 @@ async def video_publisher(video_source: rtc.VideoSource, video_queue: asyncio.Qu
         except Exception as e:
             logger.error(f"Error in stream synchronizer: {e}")
             await asyncio.sleep(0.01)
-
 
 async def av_publisher(av_sync: rtc.AVSynchronizer, audio_queue: asyncio.Queue, video_queue: asyncio.Queue):
     while True:
@@ -127,8 +123,6 @@ async def av_publisher(av_sync: rtc.AVSynchronizer, audio_queue: asyncio.Queue, 
         except Exception as e:
             logger.error(f"Error in stream synchronizer: {e}")
             await asyncio.sleep(0.01)
-
-
 
 async def entrypoint(ctx: agents.JobContext):
 
@@ -176,7 +170,6 @@ async def entrypoint(ctx: agents.JobContext):
 
 
     await asyncio.gather(*async_tasks)
-
 
 
 if __name__ == "__main__":

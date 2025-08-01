@@ -40,18 +40,41 @@ services:
       context: .
       dockerfile: Dockerfile
     volumes:
-      - .:/app
+      - ./src:/app/src
+      - ./pyproject.toml:/app/pyproject.toml
+      - ./uv.lock:/app/uv.lock
+      - ./.env.local:/app/.env.local
       - ~/.livekit:/root/.livekit
     environment:
       - PYTHONPATH=/app/src
       - LIVEKIT_URL=ws://livekit:7880
       - LIVEKIT_API_KEY=devkey
       - LIVEKIT_API_SECRET=secret
-    command: uv run python src/audio3.py dev
+      - AVATAR_DISPATCHER_URL=http://dispatcher:8089/launch
+    command: uv run python src/agent.py dev
     networks:
       - livekit-net
     depends_on:
       - livekit
+      - dispatcher
+
+  # Avatar Dispatcher
+  dispatcher:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    volumes:
+      - ./src:/app/src
+      - ./pyproject.toml:/app/pyproject.toml
+      - ./uv.lock:/app/uv.lock
+      - ./.env.local:/app/.env.local
+    environment:
+      - PYTHONPATH=/app/src
+    command: uv run python src/dispatcher.py --host 0.0.0.0 --port 8089
+    ports:
+      - "8089:8089"
+    networks:
+      - livekit-net
 
 networks:
   livekit-net:

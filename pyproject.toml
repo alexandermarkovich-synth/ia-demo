@@ -12,6 +12,9 @@ dependencies = [
     "livekit-agents[openai,turn-detector,silero,cartesia,deepgram]~=1.2",
     "python-dotenv",
     "numpy",
+    "uvicorn",
+    "fastapi",
+    "opencv-python",
 ]
 
 [dependency-groups]
